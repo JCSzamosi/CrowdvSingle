@@ -1,64 +1,142 @@
 Exposure Tradeoff Thing
 =======================
 
+This is me playing with numbers. It is not real science. It is certainly
+not real epidemiology, and no one should take it seriously or follow my 
+advice.
+
+## Setup
 ```{r}
 library(tidyverse)
 theme_set(theme_bw())
 ```
 
-Let's assume that when you are in the crowd you are always breathing in 
-proximity with exactly one person. It just makes life easier.
+## Description
+
+### Parameters:
+
+* prevalence ranges from 1/10 to 1/5000
+* threshold exposure times range from 900 to 7200 (if the units are seconds 
+then that's equivalent to 15 minutes to 2 hours)
+* total exposure times range from 900 to 14400 (15 minutes to 4 hours)
+* there are two crowd densities. Equivalent to constant exposure to 1 
+person or constant exposure to 10 people (check my math on this)
+* crowd sizes range from 10 to 500 people in steps of 10.
+    * remember that crowd size here is not "the number of people at the 
+    park" but rather "the number of people you came in contact with while
+    at the park". So for a given crowd density, the more people there are,
+    the less time you spend with each person. To do this right I should 
+    probably make density a function of crowd size, and number of people
+    exposed to a function of both density and total time. That is not what
+    is done here.
+
+### Calculations:
+
+I iterate through all the parameter values except where threshold time
+is greater than total time. In all cases, the probability of reaching the
+threshold in a single-person exposure is equal to the prevalence in the 
+population.
+
+In a crowd, I calculate the threshold number of people required to give
+a threshold exposure as the crowd size times the ratio of the threshold time
+to the total time, divided by the crowd density. So, if the threshold time 
+is 1800 (30 minutes) and the exposure time is 3600 (1 hour) then I need
+50% of the crowd to be hits in a low-density crowd, or 5% of the crowd
+to be hits in a high-density crowd. Is this correct? I think this is
+correct.
+
+The probability of at least n_thresh hits in a crowd of size n is given by
+the area under the region of the probability density function of a
+binomial distribution with size n and p = prevalence where hits are greater
+than or equal to n_thresh.
 
 ```{r}
-prevs = c(1/100,1/500,1/1000,1/5000)
-t_ths = c(10,30,300,900,1800,3600)
+prevs = c(1/10,1/100,1/500,1/1000,1/5000)
+t_ths = c(900,1800,3600)
 t_tots = c(900,1800,3600,4*3600)
-ns = c(5,10,50,100,200,300,400,500)
+c_dens = c(1,10)
+ns = seq(10,500,10)
 
-df = data.frame(Prev = NA, 
-                T_thresh = NA, 
-                T_total = NA, 
+df = data.frame(Prevalence = NA, 
+                TimeThresh = NA, 
+                TimeTotal = NA, 
+                CrowdDensity = NA,
                 N = NA, 
-                N_thresh = NA, 
-                P_single = NA, 
-                P_crowd = NA)
+                NThresh = NA, 
+                PSingle = NA, 
+                PCrowd = NA)
 
 for (prev in prevs){
     for (n in ns){
         for (t_total in t_tots){
-            for (t_thresh in t_ths[t_ths < t_total]){
-                p_single = prev
-                n_thresh = round(n*t_thresh/t_total)
-                p_crowd = choose(n, n_thresh) * prev^n_thresh *
-                    (1-prev)^(n - n_thresh)
-                df = rbind(df,
-                           data.frame(Prev = prev,
-                                      T_thresh = t_thresh,
-                                      T_total = t_total,
-                                      N = n,
-                                      N_thresh = n_thresh,
-                                      P_single = p_single,
-                                      P_crowd = p_crowd))
+            for (den in c_dens){
+                for (t_thresh in t_ths[t_ths < t_total]){
+                    p_single = prev
+                    n_thresh = round(n*t_thresh/t_total)/den
+                    p_crowd = pbinom(n_thresh - 1, n, prev,
+                                     lower.tail = FALSE,
+                                     log.p = TRUE)
+                    df = rbind(df,
+                               data.frame(Prevalence = prev,
+                                          TimeThresh = t_thresh,
+                                          TimeTotal = t_total,
+                                          CrowdDensity = den,
+                                          N = n,
+                                          NThresh = n_thresh,
+                                          PSingle = p_single,
+                                          PCrowd = p_crowd))
+                }
             }
         }
     }
 }
 df = df[-1,]
-head(df)
+#head(df)
 
-library(tidyverse)
-df = (df
-      %>% mutate_at(c('Prev','T_thresh','T_total'), factor)
-      %>% gather(P_type, Probability, starts_with('P_')))
-head(df)
+df_long = (df
+      %>% mutate_at(c('Prevalence','TimeThresh','TimeTotal',
+                      'CrowdDensity'), factor)
+      %>% gather(P_type, Probability, PSingle, PCrowd)
+      %>% mutate(Probability = log10(exp(Probability))))
+#head(df_long)
 
-plt = ggplot(df, aes(N, Probability)) +
-    geom_line(aes(linetype = P_type, colour = Prev)) +
-    facet_grid(T_thresh ~ T_total, scales = 'free_y') +
-    scale_y_log10()
-plt
-pdf('tradeoffs.pdf')
-plt
+plt_1 = ggplot(filter(df_long, CrowdDensity == 1), 
+             aes(N, Probability)) +
+    geom_line(aes(linetype = P_type, colour = Prevalence)) +
+    facet_grid(TimeThresh ~ TimeTotal, scale = 'free_y') +
+    ylab('Probability (log10)') +
+    scale_colour_brewer(palette = 'Dark2') +
+    ggtitle('In a low-density crowd')
+plt_1
+pdf('tradeoffs_low.pdf')
+plt_1
 dev.off()
+
+plt_10 = plt_1 %+% filter(df_long, CrowdDensity == 10) +
+    ggtitle('In a high-density crowd')
+plt_10
+
+pdf('tradeoffs_high.pdf')
+plt_10
+dev.off()
+
+filter(df, PCrowd > PSingle)
 ```
 
+The jaggedness of the lines is caused by the fact that n_thresh is required
+to be an integer, so there is rounding happening.
+
+There is nowhere in this set of parameter values where PCrowd is greater 
+than PSingle.
+
+## Conclusions
+
+Possibly counterintuitively:
+
+* Walking/biking along a moderately crowded path where you are constantly 
+passing people is safer than spending that same amount of time sitting in 
+an equivalent proximity to a single random person.
+
+* If you are at a crowded outdoor event (say, a protest) it is safer to move
+around and vary which people you are in proximity to than to spend a lot
+of time in proximity to the same person or people.

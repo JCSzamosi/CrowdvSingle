@@ -3,7 +3,10 @@ Exposure Tradeoff Thing
 
 This is me playing with numbers. It is not real science. It is certainly
 not real epidemiology, and no one should take it seriously or follow my 
-advice.
+advice. I did this to help myself think about the risks associated with 
+various outdoor activities.
+
+You can find the code [here](./Tradeoffs.Rmd).
 
 ## Setup
 ```{r}
@@ -25,10 +28,9 @@ person or constant exposure to 10 people (check my math on this)
     * remember that crowd size here is not "the number of people at the 
     park" but rather "the number of people you came in contact with while
     at the park". So for a given crowd density, the more people there are,
-    the less time you spend with each person. To do this right I should 
-    probably make density a function of crowd size, and number of people
-    exposed to a function of both density and total time. That is not what
-    is done here.
+    the less time you spend with each person. This can be thought of as the
+    difference between having a picnic, going for a walk, or going for a 
+    bike ride.
 
 ### Calculations:
 
@@ -123,11 +125,18 @@ dev.off()
 filter(df, PCrowd > PSingle)
 ```
 
-The jaggedness of the lines is caused by the fact that n_thresh is required
-to be an integer, so there is rounding happening.
+## Some facts:
 
-There is nowhere in this set of parameter values where PCrowd is greater 
+* The jaggedness of the lines is caused by the fact that n_thresh is
+required to be an integer, so there is rounding happening.
+* There is nowhere in this set of parameter values where PCrowd is greater 
 than PSingle.
+* pdfs of the plots shown above can be downloaded 
+[here](./tradeoffs_low.pdf) and [here](./tradeoffs_high.pdf)
+* This is all predicated on the idea that threshold exposure outdoors is
+small enough to be achievable. I don't know whether it is, but if it is not
+then there is no need to worry about any of this (although the math for
+indoor exposure is the same).
 
 ## Conclusions
 
@@ -140,3 +149,5 @@ an equivalent proximity to a single random person.
 * If you are at a crowded outdoor event (say, a protest) it is safer to move
 around and vary which people you are in proximity to than to spend a lot
 of time in proximity to the same person or people.
+
+## Fin

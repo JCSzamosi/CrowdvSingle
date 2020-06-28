@@ -182,7 +182,8 @@ summary {
 
 <div id="exposure-tradeoff-thing" class="section level1">
 <h1>Exposure Tradeoff Thing</h1>
-<p>This is me playing with numbers. It is not real science. It is certainly not real epidemiology, and no one should take it seriously or follow my advice.</p>
+<p>This is me playing with numbers. It is not real science. It is certainly not real epidemiology, and no one should take it seriously or follow my advice. I did this to help myself think about the risks associated with various outdoor activities.</p>
+<p>You can find the code <a href="./Tradeoffs.Rmd">here</a>.</p>
 <div id="setup" class="section level2">
 <h2>Setup</h2>
 <pre class="r"><code>library(tidyverse)</code></pre>
@@ -207,7 +208,7 @@ summary {
 <li>there are two crowd densities. Equivalent to constant exposure to 1 person or constant exposure to 10 people (check my math on this)</li>
 <li>crowd sizes range from 10 to 500 people in steps of 10.
 <ul>
-<li>remember that crowd size here is not “the number of people at the park” but rather “the number of people you came in contact with while at the park”. So for a given crowd density, the more people there are, the less time you spend with each person. To do this right I should probably make density a function of crowd size, and number of people exposed to a function of both density and total time. That is not what is done here.</li>
+<li>remember that crowd size here is not “the number of people at the park” but rather “the number of people you came in contact with while at the park”. So for a given crowd density, the more people there are, the less time you spend with each person. This can be thought of as the difference between having a picnic, going for a walk, or going for a bike ride.</li>
 </ul></li>
 </ul>
 </div>
@@ -292,9 +293,16 @@ dev.off()</code></pre>
 <pre><code>## [1] Prevalence   TimeThresh   TimeTotal    CrowdDensity N           
 ## [6] NThresh      PSingle      PCrowd      
 ## &lt;0 rows&gt; (or 0-length row.names)</code></pre>
-<p>The jaggedness of the lines is caused by the fact that n_thresh is required to be an integer, so there is rounding happening.</p>
-<p>There is nowhere in this set of parameter values where PCrowd is greater than PSingle.</p>
 </div>
+</div>
+<div id="some-facts" class="section level2">
+<h2>Some facts:</h2>
+<ul>
+<li>The jaggedness of the lines is caused by the fact that n_thresh is required to be an integer, so there is rounding happening.</li>
+<li>There is nowhere in this set of parameter values where PCrowd is greater than PSingle.</li>
+<li>pdfs of the plots shown above can be downloaded <a href="./tradeoffs_low.pdf">here</a> and <a href="./tradeoffs_high.pdf">here</a></li>
+<li>This is all predicated on the idea that threshold exposure outdoors is small enough to be achievable. I don’t know whether it is, but if it is not then there is no need to worry about any of this (although the math for indoor exposure is the same).</li>
+</ul>
 </div>
 <div id="conclusions" class="section level2">
 <h2>Conclusions</h2>
@@ -303,6 +311,9 @@ dev.off()</code></pre>
 <li><p>Walking/biking along a moderately crowded path where you are constantly passing people is safer than spending that same amount of time sitting in an equivalent proximity to a single random person.</p></li>
 <li><p>If you are at a crowded outdoor event (say, a protest) it is safer to move around and vary which people you are in proximity to than to spend a lot of time in proximity to the same person or people.</p></li>
 </ul>
+</div>
+<div id="fin" class="section level2">
+<h2>Fin</h2>
 </div>
 </div>
 

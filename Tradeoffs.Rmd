@@ -1,0 +1,64 @@
+Exposure Tradeoff Thing
+=======================
+
+```{r}
+library(tidyverse)
+theme_set(theme_bw())
+```
+
+Let's assume that when you are in the crowd you are always breathing in 
+proximity with exactly one person. It just makes life easier.
+
+```{r}
+prevs = c(1/100,1/500,1/1000,1/5000)
+t_ths = c(10,30,300,900,1800,3600)
+t_tots = c(900,1800,3600,4*3600)
+ns = c(5,10,50,100,200,300,400,500)
+
+df = data.frame(Prev = NA, 
+                T_thresh = NA, 
+                T_total = NA, 
+                N = NA, 
+                N_thresh = NA, 
+                P_single = NA, 
+                P_crowd = NA)
+
+for (prev in prevs){
+    for (n in ns){
+        for (t_total in t_tots){
+            for (t_thresh in t_ths[t_ths < t_total]){
+                p_single = prev
+                n_thresh = round(n*t_thresh/t_total)
+                p_crowd = choose(n, n_thresh) * prev^n_thresh *
+                    (1-prev)^(n - n_thresh)
+                df = rbind(df,
+                           data.frame(Prev = prev,
+                                      T_thresh = t_thresh,
+                                      T_total = t_total,
+                                      N = n,
+                                      N_thresh = n_thresh,
+                                      P_single = p_single,
+                                      P_crowd = p_crowd))
+            }
+        }
+    }
+}
+df = df[-1,]
+head(df)
+
+library(tidyverse)
+df = (df
+      %>% mutate_at(c('Prev','T_thresh','T_total'), factor)
+      %>% gather(P_type, Probability, starts_with('P_')))
+head(df)
+
+plt = ggplot(df, aes(N, Probability)) +
+    geom_line(aes(linetype = P_type, colour = Prev)) +
+    facet_grid(T_thresh ~ T_total, scales = 'free_y') +
+    scale_y_log10()
+plt
+pdf('tradeoffs.pdf')
+plt
+dev.off()
+```
+

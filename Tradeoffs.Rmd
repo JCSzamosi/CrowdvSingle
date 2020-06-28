@@ -4,7 +4,9 @@ Exposure Tradeoff Thing
 This is me playing with numbers. It is not real science. It is certainly
 not real epidemiology, and no one should take it seriously or follow my 
 advice. I did this to help myself think about the risks associated with 
-various outdoor activities.
+various outdoor activities. In particular, the difference between a
+"distance date" at a park or in a yard with a single friend versus going 
+for a solo walk or bike ride on a populated trail.
 
 You can find the code [here](./Tradeoffs.Rmd).
 
